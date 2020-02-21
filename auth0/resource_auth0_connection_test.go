@@ -363,3 +363,54 @@ resource "auth0_connection" "salesforce_community" {
 	}
 }
 `
+
+func TestAccPasswordlessEmailConnection(t *testing.T) {
+	rand := random.String(6)
+
+	resource.Test(t, resource.TestCase{
+		Providers: map[string]terraform.ResourceProvider{
+			"auth0": Provider(),
+		},
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: random.Template(testAccPasswordlessEmailConnectionConfig, rand),
+				Check: resource.ComposeTestCheckFunc(
+					random.TestCheckResourceAttr("auth0_connection.passwordless_email", "name", "Acceptance-Test-PasswordlessEmail-Connection-{{.random}}", rand),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "strategy", "email"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.disable_signup", "true"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.totp.time_step", "180"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.totp.length", "6"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.name", "email"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.email.0.syntax", "liquid"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.email.0.from", "<support@example.com>"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.email.0.subject", "Some subject"),
+					resource.TestCheckResourceAttr("auth0_connection.passwordless_email", "options.0.email.0.body", "Some email body"),
+				),
+			},
+		},
+	})
+}
+
+const testAccPasswordlessEmailConnectionConfig = `
+
+resource "auth0_connection" "passwordless_email" {
+	name = "Acceptance-Test-PasswordlessEmail-Connection-{{.random}}"
+	is_domain_connection = false
+	strategy = "email"
+
+	options {
+		disable_signup = true
+		name = "email"
+		email {
+			syntax = "liquid"
+			from = "<support@example.com>"
+          	subject = "Some subject"
+			body = "Some email body"
+		}
+		totp = {
+			time_step = 180
+			length = 6
+		}
+	}
+}
+`

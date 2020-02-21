@@ -307,6 +307,32 @@ func newConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+
+						// passwordless email
+						"email": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"syntax": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"from": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"subject": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"body": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -404,6 +430,9 @@ func readConnection(d *schema.ResourceData, m interface{}) error {
 
 			// salesforce
 			"community_base_url": auth0.StringValue(c.Options.CommunityBaseURL),
+
+			// passwordless email
+			"email": c.Options.Email,
 		},
 	})
 
@@ -503,6 +532,26 @@ func buildConnection(d *schema.ResourceData) *management.Connection {
 			// salesforce
 			CommunityBaseURL: String(MapData(m), "community_base_url"),
 		}
+
+		// passwordless email
+		List(MapData(m), "email").First(func(v interface{}) {
+			m := v.(map[string]interface{})
+
+			email := &management.PasswordlessEmail{
+				Syntax:  String(MapData(m), "syntax"),
+				From:    String(MapData(m), "from"),
+				Subject: String(MapData(m), "subject"),
+				Body:    String(MapData(m), "body"),
+			}
+
+			if c.Options.Email == nil {
+				opt := &management.ConnectionOptionsEmail{}
+				opt.SetPasswordlessEmail(email)
+				c.Options.Email = opt
+			} else {
+				c.Options.Email.SetPasswordlessEmail(email)
+			}
+		})
 
 		List(MapData(m), "password_history").First(func(v interface{}) {
 
