@@ -521,16 +521,20 @@ func buildConnection(d *schema.ResourceData) *management.Connection {
 			Syntax:              String(MapData(m), "syntax"),
 			Template:            String(MapData(m), "template"),
 			MessagingServiceSid: String(MapData(m), "messaging_service_sid"),
-			Totp: &management.ConnectionOptionsTotp{
-				TimeStep: Int(MapData(m), "time_step"),
-				Length:   Int(MapData(m), "length"),
-			},
 
 			// adfs
 			AdfsServer: String(MapData(m), "adfs_server"),
 
 			// salesforce
 			CommunityBaseURL: String(MapData(m), "community_base_url"),
+		}
+
+		// totp
+		if totp := Map(MapData(m), "totp"); totp != nil {
+			c.Options.Totp = &management.ConnectionOptionsTotp{
+				TimeStep: Int(MapData(totp), "time_step"),
+				Length:   Int(MapData(totp), "length"),
+			}
 		}
 
 		// passwordless email

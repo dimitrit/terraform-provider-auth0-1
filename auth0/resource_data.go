@@ -2,6 +2,7 @@ package auth0
 
 import (
 	"reflect"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
@@ -73,7 +74,16 @@ func Int(d Data, key string) (i *int) {
 	if d.IsNewResource() || d.HasChange(key) {
 		v, ok := d.GetOkExists(key)
 		if ok {
-			i = auth0.Int(v.(int))
+			switch w := v.(type) {
+			case int:
+				i = auth0.Int(w)
+			case string:
+				if j, e := strconv.Atoi(w); e == nil {
+					i = auth0.Int(j)
+				}
+			default:
+				// ignore unexpected data type
+			}
 		}
 	}
 	return

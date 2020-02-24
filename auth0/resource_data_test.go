@@ -1,7 +1,9 @@
 package auth0
 
 import (
+	"strconv"
 	"testing"
+	"time"
 )
 
 func TestMapData(t *testing.T) {
@@ -30,4 +32,41 @@ func TestJSON(t *testing.T) {
 	if !ok {
 		t.Errorf("Expected result to be a int, instead it was %T\n", j)
 	}
+}
+
+func TestInt(t *testing.T) {
+	k := "some-key"
+
+	t.Run("int", func(t *testing.T) {
+		v := 42
+		d := MapData(map[string]interface{}{
+			k: v,
+		})
+		a := Int(d, k)
+		if *a != v {
+			t.Errorf("unexpected value %d", *a)
+		}
+	})
+
+	t.Run("string", func(t *testing.T) {
+		v := "123"
+		d := MapData(map[string]interface{}{
+			k: v,
+		})
+		a := Int(d, k)
+		w, _ := strconv.Atoi(v)
+		if *a != w {
+			t.Errorf("unexpected value %d", *a)
+		}
+	})
+
+	t.Run("not an int", func(t *testing.T) {
+		d := MapData(map[string]interface{}{
+			k: time.Now(),
+		})
+		a := Int(d, k)
+		if a != nil {
+			t.Errorf("unexpected value %v", *a)
+		}
+	})
 }
